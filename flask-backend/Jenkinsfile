@@ -11,16 +11,14 @@ pipeline {
         stage('Install dependencies') {
             steps {
                 sh '''
-                    cd flask-backend
-                    echo "Creating venv if not exists..."
-                    if [ ! -d venv ]; then
-                        python3 -m venv venv
-                    fi
-                    echo "Activating venv..."
-                    . venv/bin/activate
-                    echo "Upgrading pip and installing dependencies..."
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                cd flask-backend
+                echo "Creating venv if not exists..."
+                [ ! -d venv ] && python3 -m venv venv
+                echo "Activating venv..."
+                . venv/bin/activate
+                echo "Upgrading pip and installing dependencies..."
+                pip install --upgrade pip --break-system-packages
+                pip install -r requirements.txt --break-system-packages
                 '''
             }
         }
@@ -28,12 +26,11 @@ pipeline {
         stage('Restart Flask service') {
             steps {
                 sh '''
-                    cd flask-backend
-                    echo "Restarting Flask app with PM2..."
-                    pm2 delete flask-app || true
-                    pm2 start venv/bin/gunicorn --name flask-app -- \
-                        --bind 0.0.0.0:5000 wsgi:app
-                    pm2 save
+                cd flask-backend
+                echo "Restarting Flask service with PM2..."
+                pm2 delete flask-app || true
+                pm2 start venv/bin/gunicorn --name flask-app -- \
+                    --bind 0.0.0.0:5000 wsgi:app
                 '''
             }
         }
@@ -41,7 +38,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Flask backend deployed successfully!'
+            echo '✅ Deployment successful!'
         }
         failure {
             echo '❌ Deployment failed!'
