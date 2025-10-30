@@ -9,18 +9,19 @@ pipeline {
         }
 
         stage('Install dependencies') {
-            steps {
-                sh '''
-                cd flask-backend
-                if [ ! -d "venv" ]; then
-                    python3 -m venv venv
-                fi
-                source venv/bin/activate
-                pip install --upgrade pip
-                pip install -r requirements.txt
-                '''
-            }
-        }
+    steps {
+        sh '''
+            cd flask-backend
+            if [ ! -d "venv" ]; then
+                python3 -m venv venv
+            fi
+            . venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
+        '''
+    }
+}
+
 
         stage('Restart Flask service') {
             steps {
@@ -41,4 +42,3 @@ pipeline {
         }
     }
 }
-
