@@ -11,20 +11,17 @@ pipeline {
         stage('Install dependencies') {
             steps {
                 sh '''
-                    echo "Checking for virtual environment..."
+                    echo Checking for virtual environment...
                     cd flask-backend
-                    if [ ! -d "venv" ]; then
-                        echo "Creating new virtual environment..."
+                    if [ ! -d venv ]; then
+                        echo Creating virtual environment...
                         python3 -m venv venv
                     fi
-
-                    echo "Activating venv and installing dependencies..."
+                    echo Activating venv and installing dependencies...
                     . venv/bin/activate
-
-                    echo "Upgrading pip with system override..."
+                    echo Upgrading pip with system override...
                     pip install --upgrade pip --break-system-packages
-
-                    echo "Installing project dependencies..."
+                    echo Installing project dependencies...
                     pip install --break-system-packages -r requirements.txt
                 '''
             }
@@ -34,8 +31,10 @@ pipeline {
             steps {
                 sh '''
                     cd flask-backend
-                    echo "Restarting Flask service with PM2..."
-                    pm2 restart flask-app || pm2 start venv/bin/gunicorn --name flask-app --bind 0.0.0.0:5000 wsgi:app
+                    echo Restarting Flask service with PM2...
+                    pm2 delete flask-app || true
+                    pm2 start venv/bin/gunicorn --name flask-app -- \
+                        --bind 0.0.0.0:5000 wsgi:app
                     pm2 save
                 '''
             }
@@ -44,10 +43,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Flask app deployed successfully!"
+            echo '✅ Flask backend deployed successfully!'
         }
         failure {
-            echo "❌ Deployment failed!"
+            echo '❌ Deployment failed!'
         }
     }
 }
