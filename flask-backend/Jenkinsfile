@@ -10,27 +10,33 @@ pipeline {
 
         stage('Install dependencies') {
             steps {
-                sh '''
-                    cd flask-backend
-                    if [ ! -d "venv" ]; then
-                        echo "Creating virtual environment..."
-                        python3 -m venv venv
-                    fi
-                    echo "Activating venv and installing requirements..."
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                // use Bash explicitly to avoid shell compatibility issues
+                sh '''#!/bin/bash
+                set -e
+                cd flask-backend
+
+                echo "Checking for virtual environment..."
+                if [ ! -d "venv" ]; then
+                    echo "Creating virtual environment..."
+                    python3 -m venv venv
+                fi
+
+                echo "Activating venv and installing dependencies..."
+                source venv/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
                 '''
             }
         }
 
         stage('Restart Flask service') {
             steps {
-                sh '''
-                    echo "Restarting Flask app..."
-                    cd flask-backend
-                    pm2 restart flask-app || pm2 start venv/bin/gunicorn --name flask-app --bind 0.0.0.0:5000 wsgi:app
-                    pm2 save
+                sh '''#!/bin/bash
+                set -e
+                cd flask-backend
+                echo "Restarting Flask app with PM2..."
+                pm2 restart flask-app || pm2 start venv/bin/gunicorn --name flask-app --bind 0.0.0.0:5000 wsgi:app
+                pm2 save
                 '''
             }
         }
