@@ -13,9 +13,13 @@ pipeline {
                 sh '''
                 cd flask-backend
                 echo "Creating venv if not exists..."
-                [ ! -d venv ] && python3 -m venv venv
+                if [ ! -d "venv" ]; then
+                    python3 -m venv venv
+                fi
+
                 echo "Activating venv..."
                 . venv/bin/activate
+
                 echo "Upgrading pip and installing dependencies..."
                 pip install --upgrade pip --break-system-packages
                 pip install -r requirements.txt --break-system-packages
@@ -28,8 +32,15 @@ pipeline {
                 sh '''
                 cd flask-backend
                 echo "Restarting Flask service with PM2..."
+
+                # Ensure PM2 can find user-installed binaries
+                export PATH=$PATH:/var/lib/jenkins/.local/bin
+
+                # Stop existing process if it exists
                 pm2 delete flask-app || true
-                pm2 start venv/bin/gunicorn --name flask-app -- \
+
+                # Start Gunicorn (global path used to avoid venv write issues)
+                pm2 start $(which gunicorn) --name flask-app -- \
                     --bind 0.0.0.0:5000 wsgi:app
                 '''
             }
