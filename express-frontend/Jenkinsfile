@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_NAME = 'express-app'
+        WORK_DIR = 'express-frontend'
+    }
+
+    stages {
+        stage('Pull latest code') {
+            steps {
+                git branch: 'main', url: 'git@github.com:bhatadarsh/jenkins_task.git'
+            }
+        }
+
+        stage('Install dependencies') {
+            steps {
+                sh '''
+                    cd $WORK_DIR
+                    echo "Installing Node.js dependencies..."
+                    npm install
+                '''
+            }
+        }
+
+        stage('Restart Express service') {
+            steps {
+                sh '''
+                    cd $WORK_DIR
+                    echo "Restarting Express service with PM2..."
+                    export PATH=$PATH:/usr/bin:/usr/local/bin
+                    pm2 delete $APP_NAME || true
+                    pm2 start npm --name $APP_NAME -- start
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Express app deployed successfully!"
+        }
+        failure {
+            echo "❌ Express app deployment failed!"
+        }
+    }
+}
