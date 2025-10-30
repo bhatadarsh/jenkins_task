@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_DIR = "/home/ubuntu/jenkins_task/express-frontend"
+    }
+
+    stages {
+        stage('Pull latest code') {
+            steps {
+                git branch: 'main', url: 'git@github.com:bhatadarsh/jenkins_task.git'
+            }
+        }
+
+        stage('Install dependencies') {
+            steps {
+                sh '''
+                cd ${APP_DIR}
+                npm install
+                '''
+            }
+        }
+
+        stage('Restart PM2 app') {
+            steps {
+                sh '''
+                pm2 restart express-app || pm2 start index.js --name express-app
+                pm2 save
+                pm2 list
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Express app deployed successfully!"
+        }
+        failure {
+            echo "❌ Deployment failed!"
+        }
+    }
+}

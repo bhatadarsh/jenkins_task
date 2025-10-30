@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_DIR = "/home/ubuntu/jenkins_task/flask-backend"
+        VENV = "${APP_DIR}/venv"
+    }
+
+    stages {
+        stage('Pull latest code') {
+            steps {
+                git branch: 'main', url: 'git@github.com:bhatadarsh/jenkins_task.git'
+            }
+        }
+
+        stage('Install dependencies') {
+            steps {
+                sh '''
+                cd ${APP_DIR}
+                source ${VENV}/bin/activate || python3 -m venv ${VENV}
+                source ${VENV}/bin/activate
+                pip install -r requirements.txt
+                '''
+            }
+        }
+
+        stage('Restart Flask service') {
+            steps {
+                sh '''
+                sudo systemctl restart flask
+                sudo systemctl status flask --no-pager
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Flask app deployed successfully!"
+        }
+        failure {
+            echo "❌ Deployment failed!"
+        }
+    }
+}
