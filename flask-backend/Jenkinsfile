@@ -11,18 +11,16 @@ pipeline {
         stage('Install dependencies') {
             steps {
                 sh '''
-                    echo Checking for virtual environment...
                     cd flask-backend
+                    echo "Creating venv if not exists..."
                     if [ ! -d venv ]; then
-                        echo Creating virtual environment...
                         python3 -m venv venv
                     fi
-                    echo Activating venv and installing dependencies...
+                    echo "Activating venv..."
                     . venv/bin/activate
-                    echo Upgrading pip with system override...
-                    pip install --upgrade pip --break-system-packages
-                    echo Installing project dependencies...
-                    pip install --break-system-packages -r requirements.txt
+                    echo "Upgrading pip and installing dependencies..."
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
                 '''
             }
         }
@@ -31,7 +29,7 @@ pipeline {
             steps {
                 sh '''
                     cd flask-backend
-                    echo Restarting Flask service with PM2...
+                    echo "Restarting Flask app with PM2..."
                     pm2 delete flask-app || true
                     pm2 start venv/bin/gunicorn --name flask-app -- \
                         --bind 0.0.0.0:5000 wsgi:app
