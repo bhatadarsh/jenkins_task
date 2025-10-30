@@ -20,7 +20,11 @@ pipeline {
 
                     echo "Activating venv and installing dependencies..."
                     . venv/bin/activate
-                    pip install --upgrade pip
+
+                    echo "Upgrading pip with system override..."
+                    pip install --upgrade pip --break-system-packages
+
+                    echo "Installing project dependencies..."
                     pip install --break-system-packages -r requirements.txt
                 '''
             }
